@@ -6,7 +6,7 @@
 /*   By: iromero- <iromero-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/12/18 14:56:35 by iromero-          #+#    #+#             */
-/*   Updated: 2019/12/18 15:43:18 by iromero-         ###   ########.fr       */
+/*   Updated: 2019/12/18 19:52:09 by iromero-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,11 +71,4 @@ char	*ft_strdup(const char *src)
 	}
 	dest[i] = '\0';
 	return (dest);
-}
-
-int	main()
-{
-	char *s = ft_strdup("hola");
-	char *s2 = ft_strdup("bb");
-	printf("%s", ft_strjoin(s, s2));
 }
