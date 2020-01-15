@@ -1,290 +1,128 @@
 #include <unistd.h>
-#include <stdlib.h>
-#include <stdarg.h>
 #include <stdio.h>
-/* 
+#include <stdarg.h>
 
-- It will manage only the following conversions: s,d and x
-- It will manage the minimum field width. (we will never test with a field with of 0)
-- It will manage only the precison flag `.`.
-*/
-
-size_t	ft_strlen(const char *s)
+size_t ft_strlen(char *s)
 {
-	size_t	value;
-	int		i;
-
-	i = 0;
-	value = 0;
+	size_t i = 0;
 	while (s[i] != '\0')
-	{
 		i++;
-		value++;
-	}
-	return (value);
+	return (i);
 }
 
-void	ft_putchar(char c)
+int	ft_numlen(long long n, int base_len)
 {
-	write (1, &c, 1);
-}
-
-void	ft_putstr(char *str)
-{
-	while (*str)
+	int i = 1;
+	while (n >= base_len || n <= -base_len)
 	{
-		ft_putchar(*str);
-		str++;
-	}
-}
-
-static int		longofnum(long int n)
-{
-	int leng;
-
-	leng = 0;
-	if (n < 0)
-	{
-		leng++;
-		n = n * -1;
-	}
-	while (n > 0)
-	{
-		n = n / 10;
-		leng++;
-	}
-	return (leng);
-}
-
-static char		*inttochar(long int n, char *num, int leng)
-{
-	num[leng--] = '\0';
-	if (n == 0)
-		num[0] = 48;
-	if (n < 0)
-	{
-		num[0] = '-';
-		n = n * -1;
-	}
-	while (n > 0)
-	{
-		num[leng--] = 48 + (n % 10);
-		n = n / 10;
-	}
-	return (num);
-}
-
-char			*ft_itoa(int n)
-{
-	char	*num;
-	int		leng;
-
-	leng = longofnum((long int)n);
-	if (!n)
-		leng = 1;
-	if (!(num = (char *)malloc(sizeof(char) * (leng + 1))))
-		return (NULL);
-	return (num = inttochar((long int)n, num, leng));
-}
-
-static int		longofnumhex(long int n)
-{
-	int leng;
-
-	leng = 0;
-	if (n < 0)
-	{
-		leng++;
-		n = n * -1;
-	}
-	while (n > 0)
-	{
-		n = n / 16;
-		leng++;
-	}
-	return (leng);
-}
-
-static char		*inttocharhex(long int n, char *num, int leng)
-{
-	num[leng--] = '\0';
-	if (n == 0)
-		num[0] = 48;
-	if (n < 0)
-	{
-		num[0] = '-';
-		n = n * -1;
-	}
-	while (n > 0)
-	{
-		if (n % 16 <= 9)
-			num[leng--] = 48 + (n % 16);
-		else
-			num[leng--] = 'W' + (n % 16);
-		n = n / 16;
-	}
-	return (num);
-}
-
-char	*ft_strdup(const char *src)
-{
-	int i = 0;
-	char *dest;
-
-	if (!(dest = malloc(1 * ft_strlen(src))))
-		return (NULL);
-	while (src[i] != '\0')
-	{
-		dest[i] = src[i];
+		n = n / base_len;
 		i++;
 	}
-	dest[i] = '\0';
-	return (dest);
+	return (i);
 }
 
-char	*ft_substr(char const *s, unsigned int start, size_t len)
+void	ft_putnum(long long n, int base_len, char *base)
 {
-	size_t	count;
-	size_t	size;
-	char	*tab;
-
-	count = 0;
-	if (!s)
-		return (NULL);
-	if (ft_strlen(s) < start)
-		return (ft_strdup(""));
-	size = ft_strlen(s + start);
-	if (size < len)
-		len = size;
-	if (!(tab = (char *)malloc((len + 1) * sizeof(char))))
-		return (NULL);
-	while (count < len)
-	{
-		tab[count] = s[start + count];
-		count++;
-	}
-	tab[count] = '\0';
-	return (tab);
+	if (n >= base_len)
+		ft_putnum(n / base_len, base_len, base);
+	write (1, &base[n % base_len], 1);
 }
 
-char			*ft_itoahex(long n)
+int ft_printf(const char *format, ...)
 {
-	char	*num;
-	int		leng;
-
-	leng = longofnumhex((long int)n);
-	if (!n)
-		leng = 1;
-	if (!(num = (char *)malloc(sizeof(char) * (leng + 1))))
-		return (NULL);
-	return (num = inttocharhex((long int)n, num, leng));
-}
-
-int ft_printf(const char *str, ... )
-{
-	va_list	valist;
-	int n = 0;
-	char *string;
-	int d;
-	unsigned int x;
-	int prec = 0;
-	int width = 0;
-	int bolprec = 0;
-	int bols = 0;
-	int aux = 0;
-	int	bolw = 0;
-	int auxd = 0;
-	if (!str)
-		return (0);
-	va_start(valist, str);
+	va_list valist;
+	long long n;
+	char *string, *str, *base;
+	int zeros = 0, spaces = 0, width = 0,  prec = 0, bolprec = 0, neg = 0, x = 0, leng = 0, base_len;
+	va_start(valist, format);
+	str = (char *)format;
 	while (*str)
 	{
 		if (*str == '%')
 		{
+			zeros = 0, spaces = 0, width = 0,  prec = 0, bolprec = 0, neg = 0, x = 0;
 			str++;
 			while (*str <= '9' && *str >= '0')
 			{
 				width = width * 10 + (*str - 48);
 				str++;
-				bolw = 1;
 			}
 			if (*str == '.')
 			{
 				str++;
-				while ((*str <= '9' && *str >= '0'))
+				while (*str <= '9' && *str >= '0')
 				{
 					prec = prec * 10 + (*str - 48);
 					str++;
 				}
-				bolprec = 1;					
+				bolprec = 1;
 			}
 			if (*str == 's')
 			{
 				string = va_arg(valist, char*);
 				if (!string)
-					string = ft_strdup("(null)");
-				bols = 1;
+					string = "(null)";
+				x = (int)ft_strlen(string);
 			}
-			else if (*str == 'd')
+			if (*str == 'd')
 			{
-				d = va_arg(valist, int);
-				string = ft_itoa(d);
-			}
-			else if (*str == 'x')
-			{
-				x = va_arg(valist, unsigned int);
-				if (x < 0)
-					x = UINT32_MAX - x;
-				string = ft_itoahex(x);
-			}
-			if (prec > 0 && prec < (int)ft_strlen(string) && bols == 1)
-			{
-				string = ft_substr(string, 0, prec);
-			}
-			else if (bolprec == 1 && prec == 0 && (bols == 1 || d == 0 || x == 0))
-				string = ft_strdup("");
-			else if (prec > 0 && prec > (int)ft_strlen(string))
-			{
-				if (bols == 0)
+				n = va_arg(valist, int);
+				if (n < 0)
 				{
-					auxd = prec - (int)ft_strlen(string);
+					n = n *-1;
+					neg = 1;
 				}
+				base = "0123456789";
+				base_len = 10;
+				x = ft_numlen(n, base_len) + neg;
 			}
-			if (width > 0)
-				aux = width - (int)ft_strlen(string) - auxd;
-			while (aux-- > 0)
+			if (*str == 'x')
 			{
-				ft_putchar(' ');
-				n++;
+				n = va_arg(valist, unsigned);
+				base = "0123456789abcdef";
+				base_len = 16;
+				x = ft_numlen(n, base_len);
 			}
-			while (auxd-- > 0)
+			if (bolprec == 1 && prec > x && *str == 's')
+				spaces = prec - x;
+			else if (bolprec == 1 && prec > x && *str != 's')
+				zeros = prec - x +  neg;
+			else if (bolprec == 1 && prec < x && *str == 's')
+				x = prec;
+			else if (bolprec == 1 && prec == 0 && (*str == 's' || n == 0))
+				x = 0;
+			spaces = width -  x - zeros;
+			while (spaces-- > 0)
 			{
-				ft_putchar('0');
-				n++;
+				write (1, " ", 1);
+				leng++;
 			}
-			ft_putstr(string);
-			n += (int)ft_strlen(string);
+			if (neg == 1)
+				write (1, "-", 1);
+			while (zeros-- > 0)
+			{
+				write (1, "0", 1);
+				leng++;
+			}
+			if (*str == 's')
+				write (1, string, x);
+			else if (x > 0)
+				ft_putnum(n, base_len, base);
+			leng += x;
 			str++;
 		}
 		else
 		{
-			ft_putchar(*str);
-			n++;
+			write (1, str, 1);
+			leng++;
 			str++;
 		}
-		bols = 0;
-		bolprec = 0;
-		width = 0;
-		prec = 0;
-		bolw = 0;
-		aux = 0;
-		auxd = 0;
 	}
-	return (n);
+	return (leng);
 }
 
-/*int	main()
+int main ()
 {
-ft_printf("x0p %.0x %.0x %.0x %.0x %.0x %.0x %.0x %.0x\n", 0, 42, 1, 4554, 2147483647, (int)2147483648, (int)-2147483648, (int)-2147483649);
-printf("x0p %.0x %.0x %.0x %.0x %.0x %.0x %.0x %.0x\n", 0, 42, 1, 4554, 2147483647, (int)2147483648, (int)-2147483648, (int)-2147483649);
-}*/
+	printf("holabb %20.3s %10s %.10s %.5d %.0d %10.10d  %10.10d %.5x %.0x %10.10x %10.10x\n", "jaime", "pepeito", "jojojojojojojo", 3, 0, 30, -30, 3, 0 , 30, -30);
+	ft_printf("holabb %20.3s %10s %.10s %.5d %.0d %10.10d  %10.10d %.5x %.0x %10.10x %10.10x\n", "jaime", "pepeito", "jojojojojojojo", 3, 0, 30,-30, 3, 0 , 30, -30);
+}
