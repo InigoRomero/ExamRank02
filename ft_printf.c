@@ -5,7 +5,7 @@
 size_t ft_strlen(char *s)
 {
 	size_t i = 0;
-	while (s[i] != '\0')
+	while (s[i]!= '\0')
 		i++;
 	return (i);
 }
@@ -28,21 +28,21 @@ void	ft_putnum(long long n, int base_len, char *base)
 	write (1, &base[n % base_len], 1);
 }
 
-int ft_printf(const char *format, ...)
+int	ft_printf(char *format, ...)
 {
 	va_list valist;
-	long long n;
-	char *string, *str, *base;
-	int zeros = 0, spaces = 0, width = 0,  prec = 0, bolprec = 0, neg = 0, x = 0, leng = 0, base_len;
+	char *base, *s, *str;
+	long num;
+	int prec = 0, width = 0, leng = 0, n = 0, space = 0, zeros = 0, base_len, bolprec = 0, neg = 0;
 	va_start(valist, format);
 	str = (char *)format;
-	while (*str)
+	while (*str != '\0')
 	{
 		if (*str == '%')
 		{
-			zeros = 0, spaces = 0, width = 0,  prec = 0, bolprec = 0, neg = 0, x = 0;
 			str++;
-			while (*str <= '9' && *str >= '0')
+			prec = 0, width = 0, n = 0, space = 0, zeros = 0, bolprec = 0, neg = 0;
+			while (*str >= '0' && *str <= '9')
 			{
 				width = width * 10 + (*str - 48);
 				str++;
@@ -50,7 +50,7 @@ int ft_printf(const char *format, ...)
 			if (*str == '.')
 			{
 				str++;
-				while (*str <= '9' && *str >= '0')
+				while (*str >= '0' && *str <= '9')
 				{
 					prec = prec * 10 + (*str - 48);
 					str++;
@@ -59,40 +59,38 @@ int ft_printf(const char *format, ...)
 			}
 			if (*str == 's')
 			{
-				string = va_arg(valist, char*);
-				if (!string)
-					string = "(null)";
-				x = (int)ft_strlen(string);
-			}
-			if (*str == 'd')
-			{
-				n = va_arg(valist, int);
-				if (n < 0)
-				{
-					n = n *-1;
-					neg = 1;
-				}
-				base = "0123456789";
-				base_len = 10;
-				x = ft_numlen(n, base_len) + neg;
+				s = va_arg(valist, char *);
+				if (!s)
+					s = "(null)";
+				n = ft_strlen(s);
 			}
 			if (*str == 'x')
 			{
-				n = va_arg(valist, unsigned);
+				num = va_arg(valist, unsigned);
 				base = "0123456789abcdef";
 				base_len = 16;
-				x = ft_numlen(n, base_len);
+				n = ft_numlen(num, base_len);
 			}
-			if (bolprec == 1 && prec > x && *str == 's')
-				spaces = prec - x;
-			else if (bolprec == 1 && prec > x && *str != 's')
-				zeros = prec - x +  neg;
-			else if (bolprec == 1 && prec < x && *str == 's')
-				x = prec;
-			else if (bolprec == 1 && prec == 0 && (*str == 's' || n == 0))
-				x = 0;
-			spaces = width -  x - zeros;
-			while (spaces-- > 0)
+			if (*str == 'd')
+			{
+				num = va_arg(valist, int);
+				base = "0123456789";
+				base_len = 10;
+				if (num < 0)
+				{
+					num = num * -1;
+					neg = 1;
+				}
+				n = ft_numlen(num, base_len) + neg;
+			}
+			if (bolprec == 1 && prec > n && *str != 's')
+				zeros = prec - n + neg;
+			else if (bolprec == 1 && prec < n && *str == 's')
+				n = prec;
+			else if (bolprec == 1 && prec == 0 && (*str == 's'|| num == 0))
+				n = 0;
+			space = width - n - zeros;
+			while (space-- > 0)
 			{
 				write (1, " ", 1);
 				leng++;
@@ -105,24 +103,27 @@ int ft_printf(const char *format, ...)
 				leng++;
 			}
 			if (*str == 's')
-				write (1, string, x);
-			else if (x > 0)
-				ft_putnum(n, base_len, base);
-			leng += x;
+				write(1, s, n);
+			else if (n > 0)
+				ft_putnum(num, base_len, base);
+			leng += n;
 			str++;
 		}
 		else
 		{
 			write (1, str, 1);
-			leng++;
 			str++;
+			leng++;
 		}
 	}
 	return (leng);
 }
 
-int main ()
+/*int main()
 {
-	printf("holabb %20.3s %10s %.10s %.5d %.0d %10.10d  %10.10d %.5x %.0x %10.10x %10.10x\n", "jaime", "pepeito", "jojojojojojojo", 3, 0, 30, -30, 3, 0 , 30, -30);
-	ft_printf("holabb %20.3s %10s %.10s %.5d %.0d %10.10d  %10.10d %.5x %.0x %10.10x %10.10x\n", "jaime", "pepeito", "jojojojojojojo", 3, 0, 30,-30, 3, 0 , 30, -30);
-}
+	printf("jaja%30.10s %.3s %.30s %20s %30.10d %30d %.10d %30.10d %5.0d %30.10x %30x %.10x %30.10x %5.0x\n", "jaime que", "jaime", "jaime", "jaime", 30, 30 , 303030, -303030, 0, 30, 30 , 303030, -303030, 0);
+	ft_printf("jaja%30.10s %.3s %.30s %20s %30.10d %30d %.10d %30.10d %5.0d %30.10x %30x %.10x %30.10x %5.0x\n", "jaime que", "jaime", "jaime", "jaime", 30, 30 , 303030, -303030, 0, 30, 30 , 303030, -303030, 0);
+
+	printf("\n%6.30s\n", "jaime");
+	ft_printf("\n%6.30s", "jaime");
+}*/
