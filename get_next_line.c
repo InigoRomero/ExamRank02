@@ -81,6 +81,7 @@ int getcharpls(char **line, char **aux, int n)
 	else
 	{
 		*line = ft_strdup(*aux);
+		free(*aux);
 		*aux = NULL;
 		return (0);
 	}
@@ -90,14 +91,14 @@ int getcharpls(char **line, char **aux, int n)
 int	get_next_line (char **line)
 {
 	static char *aux;
-	char buffer[512];
+	char buffer[65];
 	char *temp;
 	int n;
 	if (!line)
 		return (-1);
 	while (ft_strchr(aux, '\n') == NULL)
 	{
-		n = read (0, buffer, 511);
+		n = read (0, buffer, 64);
 		if (n < 0)
 			return (-1);
 		if (n == 0)
